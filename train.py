@@ -110,7 +110,7 @@ def train_eval(train_loc, test_seen_loc, test_unseen_loc, lr=args.lr,
 
             loss_arr = np.append(loss_arr, loss.item())
             loss_arr_mean = np.append(loss_arr_mean, loss_arr.mean())
-        print(f'    Loss: {loss_arr[-40:].mean()}')
+        print(f'    Epoch loss: {loss_arr[-40:].mean()}')
         print(f'    Mean loss: {loss_arr_mean[-1]}')
 
         if val:
@@ -127,9 +127,6 @@ def train_eval(train_loc, test_seen_loc, test_unseen_loc, lr=args.lr,
         
         if plotloss:
             plt.clf()
-            #plt.plot(roc[0], roc[1])
-            #plt.ylabel('TPR')
-            #plt.xlabel('FPR')
             plt.plot(loss_arr_mean, 'b')
             plt.draw()
             plt.pause(0.001)
@@ -161,47 +158,10 @@ if args.mode == 'val':
         y_true_all = np.append(y_true_all, y_true)
     np.savetxt('y_true.txt', y_true_all, '%d')
     np.savetxt('y_score.txt', y_score_all)
-'''
-# Balance scores for each class by oversampling
 
-def balance_class(y_score, y_true, loc):
-    classes = np.unique(labels[loc])
-    class_samples = np.bincount(labels[loc])
-    max_samples = np.amax(class_samples) if class_samples.size > 0 else 0
-    y_score_bal = np.zeros(0)
-    y_true_bal = np.zeros(0, dtype=int)
-    for c in classes:
-        y_score_c = y_score[labels[loc] == c]
-        y_true_c = y_true[labels[loc] == c]
-        y_score_bal = np.append(y_score_bal, y_score_c)
-        y_true_bal = np.append(y_true_bal, y_true_c)
-        extra_idx = np.random.choice(np.arange(y_score_c.size), max_samples-class_samples[c])
-        y_score_bal = np.append(y_score_bal, y_score_c[extra_idx])
-        y_true_bal = np.append(y_true_bal, y_true_c[extra_idx])
-    return y_score_bal, y_true_bal
-
-y_score_bal_seen, y_true_bal_seen = balance_class(
-    y_score_all[y_true_all.astype(bool)],
-    y_true_all[y_true_all.astype(bool)],
-    seen_loc_all
-)
-
-y_score_bal_unseen, y_true_bal_unseen = balance_class(
-    y_score_all[~y_true_all.astype(bool)],
-    y_true_all[~y_true_all.astype(bool)],
-    unseen_loc_all
-)
-
-y_score_bal = np.append(y_score_bal_seen, y_score_bal_unseen)
-y_true_bal = np.append(y_true_bal_seen, y_true_bal_unseen)
-'''
 if args.mode == 'test':
     print('\nTESTING\n')
     y_score_test, y_true_test, y_score_train = train_eval(trainval_loc, test_seen_loc,
              test_unseen_loc, num_train_scores=test_seen_loc.size)
     np.savetxt('y_score_test.txt', y_score_test)
     np.savetxt('y_score_train.txt', y_score_train)
-#np.savetxt('train_seen_loc.txt', seen_loc_all, '%d')
-#np.savetxt('train_unseen_loc.txt', unseen_loc_all, '%d')
-#np.savetxt('y_true_bal.txt', y_true_bal, '%d')
-#np.savetxt('y_score_bal.txt', y_score_bal)

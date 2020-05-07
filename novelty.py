@@ -12,12 +12,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str)
 parser.add_argument('--roc', action='store_true', dest='roc')
 parser.add_argument('--type', type=str, default='percentiles',
-        choices=['percentiles', 'gaussian', 'threshold', 'threshold-pc', 'logistic'])
-parser.add_argument('--balanced', action='store_true', dest='balanced')
-parser.add_argument('--adjusted', action='store_true', dest='adjusted')
+        choices=['percentiles', 'gaussian', 'threshold', 'logistic'])
 parser.add_argument('--bias', type=float, default=1)
 parser.add_argument('--showbest', action='store_true', dest='showbest')
-parser.set_defaults(balanced=False, roc=False, adjusted=False, showbest=False)
+parser.add_argument('--plot', action='store_true', dest='plot')
+parser.set_defaults(roc=False, showbest=False, plot=False)
 args = parser.parse_args()
 os.chdir(args.dataset)
 
@@ -26,28 +25,23 @@ splits = scipy.io.loadmat('att_splits.mat')
 labels = res101['labels'][:,0]
 test_seen_loc = splits['test_seen_loc'][:,0]-1
 test_unseen_loc = splits['test_unseen_loc'][:,0]-1
-
-if args.balanced:
-    y_score = np.loadtxt('y_score_bal.txt')
-    y_true = np.loadtxt('y_true_bal.txt', dtype=int)
-else:
-    y_score = np.loadtxt('y_score.txt')
-    y_true = np.loadtxt('y_true.txt', dtype=int)
+y_score = np.loadtxt('y_score.txt')
+y_true = np.loadtxt('y_true.txt', dtype=int)
 
 y_score_test = np.loadtxt('y_score_test.txt')
-y_score_train = np.loadtxt('y_score_train.txt')
 print(f'Val seen score mean: {y_score[y_true.astype(bool)].mean()}')
-print(f'Train score mean: {y_score_train.mean()}')
 print(f'Test seen score mean: {y_score_test[:test_seen_loc.size].mean()}')
-if args.adjusted:
-    y_score_test += y_score[y_true.astype(bool)].mean() - y_score_train.mean()
-sns.distplot(y_score[y_true.astype(bool)], hist=False, kde=True, label='val seen')
-sns.distplot(y_score[~y_true.astype(bool)], hist=False, kde=True, label='val unseen')
-#sns.distplot(y_score_train, hist=False, kde=True, label='train seen')
-sns.distplot(y_score_test[:test_seen_loc.size], hist=False, kde=True, label='test seen')
-sns.distplot(y_score_test[test_seen_loc.size:], hist=False, kde=True, label='test unseen')
-plt.legend()
-#plt.show()
+if args.plot:
+    plt_val_s = sns.distplot(y_score[y_true.astype(bool)], hist=False, kde=True, label='val seen')
+    plt_val_u = sns.distplot(y_score[~y_true.astype(bool)], hist=False, kde=True, label='val unseen')
+    plt_test_s = sns.distplot(y_score_test[:test_seen_loc.size], hist=False, kde=True, label='test seen')
+    plt_test_u = sns.distplot(y_score_test[test_seen_loc.size:], hist=False, kde=True, label='test unseen')
+    np.savetxt('val_s_kde.txt', plt_val_s.axes.lines[0].get_xydata(), '(%1.4f, %1.4f)')
+    np.savetxt('val_u_kde.txt', plt_val_u.axes.lines[1].get_xydata(), '(%1.4f, %1.4f)')
+    np.savetxt('test_s_kde.txt', plt_test_s.axes.lines[2].get_xydata(), '(%1.4f, %1.4f)')
+    np.savetxt('test_u_kde.txt', plt_test_u.axes.lines[3].get_xydata(), '(%1.4f, %1.4f)')
+    plt.legend()
+    plt.show()
 
 y_true_test = np.append(
     np.ones(test_seen_loc.size, dtype=int),
@@ -156,19 +150,11 @@ print_acc_per_class(novelty_seen, novelty_unseen, test_seen_loc,
 print(f'Total acc: {((novelty_seen < 0.5).sum() + (novelty_unseen > 0.5).sum())/(novelty_seen.size+novelty_unseen.size)}')
 np.savetxt(f'novelty_seen.txt', novelty_seen)
 np.savetxt(f'novelty_unseen.txt', novelty_unseen)
-print('BEST:')
-print_acc(novelty_best[y_true_test.astype(bool)],
-        novelty_best[~y_true_test.astype(bool)])
-print(f'Total acc: {((novelty_best[y_true_test.astype(bool)] < 0.5).sum() + (novelty_best[~y_true_test.astype(bool)] > 0.5).sum())/(novelty_seen.size+novelty_unseen.size)}')
-'''
 if args.showbest:
-    print('BEST')
-    novelty_best = novelty_threshold_per_class(y_score_test, y_true_test,
-            y_score_test, test_seen_loc, test_unseen_loc)
-    novelty_seen_best, novelty_unseen_best = np.split(novelty_best, [test_seen_loc.size])
-    print_acc_per_class(novelty_seen_best, novelty_unseen_best, test_seen_loc,
-            test_unseen_loc)
-'''
+    print('BEST:')
+    print_acc(novelty_best[y_true_test.astype(bool)],
+            novelty_best[~y_true_test.astype(bool)])
+    print(f'Total acc: {((novelty_best[y_true_test.astype(bool)] < 0.5).sum() + (novelty_best[~y_true_test.astype(bool)] > 0.5).sum())/(novelty_seen.size+novelty_unseen.size)}')
 if args.roc:
     roc = roc_curve(y_true, y_score)
     plt.plot(roc[0], roc[1])

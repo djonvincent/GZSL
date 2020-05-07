@@ -9,6 +9,7 @@ do
     bias=${biases[$idx]}
     eps=${epochs[$idx]}
     w=${wd[$idx]}
+    python ale.py --dataset $dset --mode test --epochs $eps --wd $w --result-file result-baseline.txt
     for type in threshold logistic percentiles gaussian
     do
         python novelty.py --dataset $dset --type $type
