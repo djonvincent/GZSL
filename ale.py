@@ -143,7 +143,7 @@ for trial in range(trials):
             loss_arr = np.append(loss_arr, loss.item())
             epoch_loss += loss.item() * batch_size
         print(f'    Mean loss: {loss_arr.mean()}')
-        print(f'    Epoch loss: {running_loss/train_loc.size}')
+        print(f'    Epoch loss: {epoch_loss/train_loc.size}')
         N.eval()
         y_ = N(x_u_test, u_attr)
         y_ = torch.argmax(y_, dim=1)
@@ -195,20 +195,6 @@ for trial in range(trials):
     all_h_score[trial] = h_score
     all_bias[trial] = bias
 
-    yuu_ = N(x_u_test, u_attr).max(dim=1)
-    yus_ = N(x_u_test, s_attr).max(dim=1)
-    yss_ = N(x_s_test, s_attr).max(dim=1)
-    ysu_ = N(x_s_test, u_attr).max(dim=1)
-    uix = yuu_.indices == y_u_test_ix
-    six = yss_.indices == y_s_test_ix
-    yuu_ = yuu_.values
-    yus_ = yus_.values
-    yss_ = yss_.values
-    ysu_ = ysu_.values
-    np.savetxt('ix.txt', torch.cat((uix, six)).cpu().detach().numpy(), '%d')
-    np.savetxt('cu.txt',torch.cat((yuu_, ysu_)).cpu().detach().numpy())
-    np.savetxt('cs.txt', torch.cat((yus_, yss_)).cpu().detach().numpy())
-    np.savetxt('y.txt', np.append(-np.ones(yuu_.size(0)), np.ones(ysu_.size(0))))
 print(f'Bias: {all_bias.mean()}')
 print(f'Acc. ZSL: {all_acc_zsl.mean()}')
 print(f'Acc. seen: {all_acc_s.mean()}')
