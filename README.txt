@@ -22,3 +22,13 @@ detection are saved as 'result-baseline.txt'.
 
 The first number is the seen accuracy, the second is the unseen accuracy, and
 the third is their harmonic mean.
+
+Credits:
+
+Akata, Z., Perronnin, F., Harchaoui, Z. & Schmid, C. (2016), ‘Label-embedding
+for image classification’, IEEE Transactions on Pattern Analysis and Machine
+Intelligence38, 1425–1438.
+
+Bhattacharjee, S., Mandal, D. & Biswas, S. (2020), Multi-class novelty
+detection using mix-uptechnique, in ‘2020 IEEE Winter Conference on Applications
+of Computer Vision’.
