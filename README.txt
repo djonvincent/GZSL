@@ -1,3 +1,5 @@
+**Please see Report.pdf for the project writeup.**
+
 Requirements:
   - scikit-learn
   - numpy
